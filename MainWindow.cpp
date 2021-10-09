@@ -196,6 +196,12 @@ void MainWindow::updatePlayerCount()
 
 void MainWindow::save()
 {
+    //first thing, finalize all results in the table
+    for (int i = 0; i < m_matches.size(); i++)
+    {
+        m_matches[i].finalizeMatch(m_players, i);
+    }
+
     const auto savePath = QFileDialog::getSaveFileName(this, "Save Match", "", "*.json");
     if (savePath.isEmpty())
     {
@@ -286,7 +292,7 @@ void MainWindow::load()
                 break;
             }
 
-            m_matches[idx].loadMatch(match, m_players);
+            m_matches[idx].loadMatch(match, m_players, idx);
             idx++;
         }
     }

@@ -157,7 +157,7 @@ void Match::generateMatch(const QList<std::shared_ptr<Player>> &playerList, std:
 
     updateMatchView();
 }
-bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Player>>& players)
+bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Player>>& players, std::size_t matchNum)
 {
     std::cout << j.dump(2) << std::endl;
     if (!j.is_array())
@@ -200,6 +200,9 @@ bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Playe
     }
 
     updateMatchView();
+    updateMatchResultsView(matchNum);
+
+    //set the output for the match results if applicable
     return true;
 }
 
@@ -328,4 +331,21 @@ void Match::updateMatchView()
     }
 
     m_matchView->resizeColumnsToContents();
+}
+void Match::updateMatchResultsView(std::size_t matchNum)
+{
+    for (int i = 0; i < m_matchups.size(); i++)
+    {
+        const auto& p1 = m_matchups[i].p1;
+        const auto& p2 = m_matchups[i].p2;
+
+        if (p1 == nullptr)
+        {
+            std::cerr << "Couldn't update match results, no player 1";
+            return;
+        }
+        m_matchView->item(i, 2)->setText(QString::number(p1->getMatchResult(matchNum).wins));
+        m_matchView->item(i, 3)->setText(QString::number(p1->getMatchResult(matchNum).losses));
+        m_matchView->item(i, 4)->setText(QString::number(p1->getMatchResult(matchNum).ties));
+    }
 }

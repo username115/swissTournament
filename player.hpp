@@ -128,6 +128,11 @@ public:
         m_id = id;
     }
 
+    inline MatchResult getMatchResult(std::size_t matchNum) const
+    {
+      return m_matchResults[matchNum];
+    }
+
     double getTiebrokenScore(std::int32_t maxMatch = -1) const;
 
     nlohmann::json toJson() const;

@@ -61,11 +61,7 @@ void to_json(nlohmann::json& j, const MatchResult& m)
     j[MR_WINS_LBL] = m.wins;
     j[MR_LOSSES_LBL] = m.losses;
     j[MR_TIES_LBL] = m.ties;
-
-    if (m.opponent != nullptr)
-    {
-        j[MR_OPP_LBL] = m.opponent->getName().toStdString();
-    }
+    j[MR_OPP_LBL] = (m.opponent != nullptr ? m.opponent->getName().toStdString() : "");
 }
 
 std::uint32_t Player::getMatchScore(std::int32_t maxMatch) const
