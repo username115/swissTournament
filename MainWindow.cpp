@@ -213,13 +213,11 @@ void MainWindow::save()
     nlohmann::json j;
 
     //generate player list
-    std::vector<std::string> playerData;
-    playerData.reserve(m_players.size());
+    auto& playerJ = j[PLAYER_LBL];
     for (const auto& p : m_players)
     {
-        playerData.emplace_back(p->getName().toStdString());
+        playerJ.push_back(p->toJson());
     }
-    j[PLAYER_LBL] = playerData;
 
     //generate match list
     j[MATCHES_LBL] = std::vector<nlohmann::json>();
@@ -259,8 +257,17 @@ void MainWindow::load()
         }
         for (const auto& p : j[PLAYER_LBL])
         {
-            m_players.emplace_back(std::make_shared<Player>(QString::fromStdString(p.get<std::string>()), 0));
+            m_players.emplace_back(std::make_shared<Player>());
+            m_players.back()->load(p);
         }
+
+        //finalize opponents now that match results are all loaded and we have a full player list
+        for (auto& p : m_players)
+        {
+            p->finalizeLoad(m_players);
+        }
+
+        //finally ready to update the list view
         updatePlayerList();
 
         //matches
@@ -285,7 +292,7 @@ void MainWindow::load()
     }
     catch(const std::exception& e)
     {
-        std::cerr << "failed to parse " << openPath.toStdString() << " as a valid match\n";
+        std::cerr << "failed to parse " << openPath.toStdString() << " as a valid tournament\n";
         std::cerr << e.what() << std::endl;
     }
 }

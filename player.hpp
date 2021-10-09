@@ -28,6 +28,8 @@
 #include <QObject>
 #include <QList>
 
+#include "json.hpp"
+
 class Player;
 
 struct MatchResult
@@ -127,6 +129,10 @@ public:
     }
 
     double getTiebrokenScore(std::int32_t maxMatch = -1) const;
+
+    nlohmann::json toJson() const;
+    bool load(const nlohmann::json& j);
+    bool finalizeLoad(const QList<std::shared_ptr<Player>>& playerList);
 
 public slots:
     void setMatchResults(std::int32_t matchNum, const MatchResult &result);

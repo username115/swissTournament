@@ -84,7 +84,11 @@ nlohmann::json Match::toJson() const
 
         auto& elem = j.back();
         elem[P_ONE_LBL] = m.p1->getName().toStdString();
-        elem[P_TWO_LBL] = m.p2->getName().toStdString();
+
+        if (m.p2 != nullptr)
+        {
+            elem[P_TWO_LBL] = m.p2->getName().toStdString();
+        }
     }
 
     return j;
@@ -163,12 +167,12 @@ bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Playe
 
     for (const auto p : j)
     {
-        if (!(p.contains(P_ONE_LBL) && p.contains(P_TWO_LBL)))
+        if (!p.contains(P_ONE_LBL))
         {
             return false;
         }
         const auto p1Name = p[P_ONE_LBL].get<std::string>();
-        const auto p2Name = p[P_TWO_LBL].get<std::string>();
+        const auto p2Name = p.contains(P_TWO_LBL) ? p[P_TWO_LBL].get<std::string>() : "";
         std::cout << "p1: " << p1Name << std::endl;
         std::cout << "p2: " << p2Name << std::endl << std::endl;
 
@@ -187,7 +191,7 @@ bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Playe
             }
         }
 
-        if (p1 == nullptr || p2 == nullptr)
+        if (p1 == nullptr)
         {
             return false;
         }
