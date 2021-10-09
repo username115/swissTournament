@@ -159,7 +159,6 @@ void Match::generateMatch(const QList<std::shared_ptr<Player>> &playerList, std:
 }
 bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Player>>& players, std::size_t matchNum)
 {
-    std::cout << j.dump(2) << std::endl;
     if (!j.is_array())
     {
         return false;
@@ -173,8 +172,6 @@ bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Playe
         }
         const auto p1Name = p[P_ONE_LBL].get<std::string>();
         const auto p2Name = p.contains(P_TWO_LBL) ? p[P_TWO_LBL].get<std::string>() : "";
-        std::cout << "p1: " << p1Name << std::endl;
-        std::cout << "p2: " << p2Name << std::endl << std::endl;
 
         // find the player whose name matches
         std::shared_ptr<Player> p1 = nullptr;

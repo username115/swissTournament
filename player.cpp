@@ -319,7 +319,6 @@ double Player::getTiebrokenScore(std::int32_t maxMatch) const
 }
 nlohmann::json Player::toJson() const
 {
-    std::cout << "here" << std::endl;
     nlohmann::json j;
     j[P_ID_LBL] = m_id;
     j[P_NAME_LBL] = m_name.toStdString();
@@ -331,7 +330,6 @@ nlohmann::json Player::toJson() const
         mrs.push_back(mr);
     }
 
-    std::cout << "out" << std::endl;
     return j;
 }
 bool Player::load(const nlohmann::json& j)
