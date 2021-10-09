@@ -43,6 +43,22 @@ void Match::setupTables()
     m_matchView->resizeColumnsToContents();
 }
 
+nlohmann::json Match::toJson() const
+{
+    nlohmann::json j;
+
+    for (const auto& m : m_matchups)
+    {
+        j.emplace_back(); // add an empty element onto the end of the JSON list
+
+        auto& elem = j.back();
+        elem["player_one"] = m.p1->getName().toStdString();
+        elem["player_two"] = m.p2->getName().toStdString();
+    }
+
+    return j;
+}
+
 void Match::setEnabled(bool enable)
 {
     m_generateMatchB->setEnabled(enable);

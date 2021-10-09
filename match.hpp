@@ -30,6 +30,8 @@
 #include "player.hpp"
 #include <random>
 
+#include "json.hpp"
+
 struct Matchup
 {
     std::shared_ptr<Player> p1;
@@ -86,6 +88,8 @@ public:
     }
 
     void setupTables();
+
+    nlohmann::json toJson() const;
 
 public slots:
     void setEnabled(bool enable);
