@@ -22,12 +22,17 @@
  * SOFTWARE.
  */
 
+#include <iostream>
+
 #include "match.hpp"
 #include <algorithm>
 #include <QMessageBox>
 #include <QLocale>
 
 #define BYE_PLAYER_ID 10
+
+constexpr const char* P_ONE_LBL = "player_one";
+constexpr const char* P_TWO_LBL = "player_two";
 
 void Match::setupTables()
 {
@@ -41,6 +46,26 @@ void Match::setupTables()
     m_matchView->setHorizontalHeaderItem(4, new QTableWidgetItem(tr("Tie")));
 
     m_matchView->resizeColumnsToContents();
+}
+
+nlohmann::json Match::toJson() const
+{
+    nlohmann::json j;
+
+    for (const auto& m : m_matchups)
+    {
+        j.emplace_back(); // add an empty element onto the end of the JSON list
+
+        auto& elem = j.back();
+        elem[P_ONE_LBL] = m.p1->getName().toStdString();
+
+        if (m.p2 != nullptr)
+        {
+            elem[P_TWO_LBL] = m.p2->getName().toStdString();
+        }
+    }
+
+    return j;
 }
 
 void Match::setEnabled(bool enable)
@@ -104,51 +129,52 @@ void Match::generateMatch(const QList<std::shared_ptr<Player>> &playerList, std:
         }
     }
 
-    m_matchView->setRowCount(m_matchups.size());
-
-    //write pairings to table
-    for (int i = 0; i < m_matchups.size(); i++)
+    updateMatchView();
+}
+bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Player>>& players, std::size_t matchNum)
+{
+    if (!j.is_array())
     {
-        if (m_matchups[i].p1 != nullptr) //should never fail, but...
-        {
-            auto item = new QTableWidgetItem(m_matchups[i].p1->getName());
-            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-            m_matchView->setItem(i, 0, item);
-        }
-        if (m_matchups[i].p2 != nullptr)
-        {
-            auto item = new QTableWidgetItem(m_matchups[i].p2->getName());
-            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-            m_matchView->setItem(i, 1, item);
-            item = new QTableWidgetItem(tr(""));
-            item->setFlags(item->flags() | Qt::ItemIsEditable);
-            m_matchView->setItem(i, 2, item);
-            item = new QTableWidgetItem(tr(""));
-            item->setFlags(item->flags() | Qt::ItemIsEditable);
-            m_matchView->setItem(i, 3, item);
-            item = new QTableWidgetItem(tr(""));
-            item->setFlags(item->flags() | Qt::ItemIsEditable);
-            m_matchView->setItem(i, 4, item);
-        }
-        else
-        {
-            auto item = new QTableWidgetItem(tr("Bye"));
-            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-            m_matchView->setItem(i, 1, item);
-            //fill in the bye info
-            item = new QTableWidgetItem(tr("2"));
-            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-            m_matchView->setItem(i, 2, item);
-            item = new QTableWidgetItem(tr("0"));
-            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-            m_matchView->setItem(i, 3, item);
-            item = new QTableWidgetItem(tr("0"));
-            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-            m_matchView->setItem(i, 4, item);
-        }
+        return false;
     }
 
-    m_matchView->resizeColumnsToContents();
+    for (const auto p : j)
+    {
+        if (!p.contains(P_ONE_LBL))
+        {
+            return false;
+        }
+        const auto p1Name = p[P_ONE_LBL].get<std::string>();
+        const auto p2Name = p.contains(P_TWO_LBL) ? p[P_TWO_LBL].get<std::string>() : "";
+
+        // find the player whose name matches
+        std::shared_ptr<Player> p1 = nullptr;
+        std::shared_ptr<Player> p2 = nullptr;
+        for (const auto& player : players)
+        {
+            if (player->getName() == QString::fromStdString(p1Name))
+            {
+                p1 = player;
+            }
+            else if (player->getName() == QString::fromStdString(p2Name))
+            {
+                p2 = player;
+            }
+        }
+
+        if (p1 == nullptr)
+        {
+            return false;
+        }
+
+        m_matchups.emplace_back(Matchup{p1, p2});
+    }
+
+    updateMatchView();
+    updateMatchResultsView(matchNum);
+
+    //set the output for the match results if applicable
+    return true;
 }
 
 bool Match::finalizeMatch(const QList<std::shared_ptr<Player>> &playerList, std::int32_t matchNum)
@@ -227,4 +253,70 @@ bool Match::generatePairing(const QList<std::shared_ptr<Player>> &playerList, st
         }
     }
     return false;
+}
+
+void Match::updateMatchView()
+{
+    m_matchView->setRowCount(m_matchups.size());
+
+    //write pairings to table
+    for (int i = 0; i < m_matchups.size(); i++)
+    {
+        if (m_matchups[i].p1 != nullptr) //should never fail, but...
+        {
+            auto item = new QTableWidgetItem(m_matchups[i].p1->getName());
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            m_matchView->setItem(i, 0, item);
+        }
+        if (m_matchups[i].p2 != nullptr)
+        {
+            auto item = new QTableWidgetItem(m_matchups[i].p2->getName());
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            m_matchView->setItem(i, 1, item);
+            item = new QTableWidgetItem(tr(""));
+            item->setFlags(item->flags() | Qt::ItemIsEditable);
+            m_matchView->setItem(i, 2, item);
+            item = new QTableWidgetItem(tr(""));
+            item->setFlags(item->flags() | Qt::ItemIsEditable);
+            m_matchView->setItem(i, 3, item);
+            item = new QTableWidgetItem(tr(""));
+            item->setFlags(item->flags() | Qt::ItemIsEditable);
+            m_matchView->setItem(i, 4, item);
+        }
+        else
+        {
+            auto item = new QTableWidgetItem(tr("Bye"));
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            m_matchView->setItem(i, 1, item);
+            //fill in the bye info
+            item = new QTableWidgetItem(tr("2"));
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            m_matchView->setItem(i, 2, item);
+            item = new QTableWidgetItem(tr("0"));
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            m_matchView->setItem(i, 3, item);
+            item = new QTableWidgetItem(tr("0"));
+            item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+            m_matchView->setItem(i, 4, item);
+        }
+    }
+
+    m_matchView->resizeColumnsToContents();
+}
+void Match::updateMatchResultsView(std::size_t matchNum)
+{
+    for (int i = 0; i < m_matchups.size(); i++)
+    {
+        const auto& p1 = m_matchups[i].p1;
+        const auto& p2 = m_matchups[i].p2;
+
+        if (p1 == nullptr)
+        {
+            std::cerr << "Couldn't update match results, no player 1";
+            return;
+        }
+        m_matchView->item(i, 2)->setText(QString::number(p1->getMatchResult(matchNum).wins));
+        m_matchView->item(i, 3)->setText(QString::number(p1->getMatchResult(matchNum).losses));
+        m_matchView->item(i, 4)->setText(QString::number(p1->getMatchResult(matchNum).ties));
+    }
 }

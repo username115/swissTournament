@@ -30,6 +30,8 @@
 #include "player.hpp"
 #include <random>
 
+#include "json.hpp"
+
 struct Matchup
 {
     std::shared_ptr<Player> p1;
@@ -87,6 +89,9 @@ public:
 
     void setupTables();
 
+    nlohmann::json toJson() const;
+    bool loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Player>>& playerList, std::size_t matchNum);
+
 public slots:
     void setEnabled(bool enable);
 
@@ -109,4 +114,7 @@ private:
 
     std::random_device m_rd;
     std::default_random_engine m_reng;
+
+    void updateMatchView();
+    void updateMatchResultsView(std::size_t matchNum);
 };

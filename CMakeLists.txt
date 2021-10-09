@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16.0)
 
 project(SwissTournament VERSION 0.1.0 LANGUAGES CXX)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -15,4 +18,6 @@ set(HEADER MainWindow.hpp match.hpp player.hpp)
 add_executable(${PROJECT_NAME} ${UI} ${SOURCE} ${HEADER})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/externals/json/)
 

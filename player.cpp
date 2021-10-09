@@ -25,6 +25,45 @@
 #include "player.hpp"
 #include <QLocale>
 
+#include <iostream>
+
+constexpr const char* MR_PLAYED_LBL = "played";
+constexpr const char* MR_WIN_LBL = "match_win";
+constexpr const char* MR_TIE_LBL = "match_tie";
+constexpr const char* MR_BYE_LBL = "bye";
+constexpr const char* MR_WINS_LBL = "wins";
+constexpr const char* MR_LOSSES_LBL = "losses";
+constexpr const char* MR_TIES_LBL = "ties";
+constexpr const char* MR_OPP_LBL = "opponent_name";
+constexpr const char* P_ID_LBL = "id";
+constexpr const char* P_NAME_LBL = "name";
+constexpr const char* P_MRS_LBL = "match_results";
+
+void from_json(const nlohmann::json& j, MatchResult& m)
+{
+    j[MR_PLAYED_LBL].get_to(m.played);
+    j[MR_WIN_LBL].get_to(m.matchWin);
+    j[MR_TIE_LBL].get_to(m.matchTie);
+    j[MR_BYE_LBL].get_to(m.bye);
+    j[MR_WINS_LBL].get_to(m.wins);
+    j[MR_LOSSES_LBL].get_to(m.losses);
+    j[MR_TIES_LBL].get_to(m.ties);
+
+    //store the opponent name to be used for pointer lookup later
+    m.opponent = std::make_shared<Player>(QString::fromStdString(j[MR_OPP_LBL]), -1);
+}
+void to_json(nlohmann::json& j, const MatchResult& m)
+{
+    j[MR_PLAYED_LBL] = m.played;
+    j[MR_WIN_LBL] = m.matchWin;
+    j[MR_TIE_LBL] = m.matchTie;
+    j[MR_BYE_LBL] = m.bye;
+    j[MR_WINS_LBL] = m.wins;
+    j[MR_LOSSES_LBL] = m.losses;
+    j[MR_TIES_LBL] = m.ties;
+    j[MR_OPP_LBL] = (m.opponent != nullptr ? m.opponent->getName().toStdString() : "");
+}
+
 std::uint32_t Player::getMatchScore(std::int32_t maxMatch) const
 {
     std::uint32_t score = 0;
@@ -277,6 +316,70 @@ double Player::getTiebrokenScore(std::int32_t maxMatch) const
            (getGameWinPercentage(maxMatch) + 0.01) / 10000 +            //gives a value between 0 and 1, so it's already a fraction
            (getOpponentMatchWinPercentage(maxMatch) + 0.01) / 1000000 + //gives a value between 0 and 1, so it's already a fraction
            (getOpponentGameWinPercentage(maxMatch)) / 100000000;        //gives a value between 0 and 1, so it's already a fraction
+}
+nlohmann::json Player::toJson() const
+{
+    nlohmann::json j;
+    j[P_ID_LBL] = m_id;
+    j[P_NAME_LBL] = m_name.toStdString();
+    j[P_MRS_LBL] = nlohmann::json();
+
+    auto& mrs = j[P_MRS_LBL];
+    for (const auto& mr : m_matchResults)
+    {
+        mrs.push_back(mr);
+    }
+
+    return j;
+}
+bool Player::load(const nlohmann::json& j)
+{
+    if (!(j.contains(P_ID_LBL) && j.contains(P_NAME_LBL) && j.contains(P_MRS_LBL)))
+    {
+        return false;
+    }
+
+    j[P_ID_LBL].get_to(m_id);
+    m_name = QString::fromStdString(j[P_NAME_LBL]);
+
+    const auto& mrsJ = j[P_MRS_LBL];
+    if (!mrsJ.is_null())
+    {
+        // null is fine, that means there were no matches played
+        for (const auto& mr : mrsJ)
+        {
+            m_matchResults.emplaceBack(); // make an empty match results
+            m_matchResults.back() = mr; // use JSON conversion function defined above
+        }
+    }
+
+    return true;
+}
+bool Player::finalizeLoad(const QList<std::shared_ptr<Player>>& playerList)
+{
+    bool res = true;
+    for (auto& mr : m_matchResults)
+    {
+        bool found = false;
+        for (const auto& p : playerList)
+        {
+            if (mr.opponent->getName() == p->getName())
+            {
+                found = true;
+                mr.opponent = p;
+                break;
+            }
+        }
+
+        //if an opponent player couldn't be found print warning and go to next match;
+        if (!found)
+        {
+            std::cerr << "WARNING: opponent lookup failed in match for " << m_name.toStdString() << "\n";
+            res = false;
+        }
+    }
+
+    return res;
 }
 
 void Player::setMatchResults(std::int32_t matchNum, const MatchResult &result)

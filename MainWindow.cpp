@@ -23,12 +23,21 @@
  */
 
 #include "MainWindow.hpp"
-#include <QInputDialog>
 
+#include "json.hpp"
+
+#include <fstream>
+#include <iostream>
+
+#include <QInputDialog>
 #include <QMessageBox>
 #include <QLocale>
+#include <QFileDialog>
 
 #define maxMatchs 5
+
+constexpr const char* PLAYER_LBL = "players";
+constexpr const char* MATCHES_LBL = "matches";
 
 void MainWindow::setupWindow()
 {
@@ -44,6 +53,9 @@ void MainWindow::setupWindow()
     connect(m_ui->match5B, &QPushButton::clicked, std::bind(&MainWindow::generateMatch, this, 4));
 
     connect(m_ui->calcTourneyResB, &QPushButton::clicked, this, &MainWindow::calcFinalResult);
+
+    connect(m_ui->actionSave_Player_List_and_Tournament, &QAction::triggered, std::bind(&MainWindow::save, this));
+    connect(m_ui->actionLoad_Player_List_and_Tournament, &QAction::triggered, std::bind(&MainWindow::load, this));
 
     m_ui->calcTourneyResB->setEnabled(false);
     m_ui->calcTourneyResB->setVisible(false);
@@ -157,6 +169,115 @@ void MainWindow::updatePlayerCount()
         m_matches[i].setEnabled(i < matchCount);
     }
     m_matchCount = matchCount;
+}
+
+void MainWindow::save()
+{
+    //first thing, finalize all results in the table
+    for (int i = 0; i < m_matches.size(); i++)
+    {
+        m_matches[i].finalizeMatch(m_players, i);
+    }
+
+    const auto savePath = QFileDialog::getSaveFileName(this, "Save Match", "", "*.json");
+    if (savePath.isEmpty())
+    {
+        return;
+    }
+
+    //open output file
+    std::ofstream outFile(savePath.toStdString());
+    if (!outFile.is_open())
+    {
+        std::cerr << "failed to open " << savePath.toStdString() << " for writing\n";
+        return;
+    }
+
+    nlohmann::json j;
+
+    //generate player list
+    auto& playerJ = j[PLAYER_LBL];
+    for (const auto& p : m_players)
+    {
+        playerJ.push_back(p->toJson());
+    }
+
+    //generate match list
+    j[MATCHES_LBL] = std::vector<nlohmann::json>();
+    for (const auto& m : m_matches)
+    {
+        j[MATCHES_LBL].push_back(m.toJson());
+    }
+
+    outFile << j.dump(4);
+}
+void MainWindow::load()
+{
+    const auto openPath = QFileDialog::getOpenFileName(this, "Open Match", "", "*.json");
+    if (openPath.isEmpty())
+    {
+        return;
+    }
+
+    //open input file
+    std::ifstream inFile(openPath.toStdString());
+    if (!inFile.is_open())
+    {
+        std::cerr << "failed to open " << openPath.toStdString() << " for reading\n";
+        return;
+    }
+
+    try
+    {
+        nlohmann::json j;
+        inFile >> j;
+
+        //player list
+        if (!j.contains(PLAYER_LBL))
+        {
+            std::cerr << "missing 'players' list\n";
+            return;
+        }
+        for (const auto& p : j[PLAYER_LBL])
+        {
+            m_players.emplace_back(std::make_shared<Player>());
+            m_players.back()->load(p);
+        }
+
+        //finalize opponents now that match results are all loaded and we have a full player list
+        for (auto& p : m_players)
+        {
+            p->finalizeLoad(m_players);
+        }
+
+        //finally ready to update the list view
+        updatePlayerList();
+
+        //matches
+        if (!j.contains(MATCHES_LBL))
+        {
+            std::cerr << "missing 'matches' list\n";
+            return;
+        }
+
+        std::size_t idx = 0;
+        for (const auto& match : j[MATCHES_LBL])
+        {
+            if (idx >= m_matches.size())
+            {
+                std::cerr << "WARNING: Ran out of space to put the matches.\n";
+                break;
+            }
+
+            m_matches[idx].loadMatch(match, m_players, idx);
+            idx++;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "failed to parse " << openPath.toStdString() << " as a valid tournament\n";
+        std::cerr << e.what() << std::endl;
+    }
 }
 
 void MainWindow::generateMatch(int matchNum)
