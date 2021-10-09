@@ -59,6 +59,9 @@
 
 #define maxMatchs 5
 
+constexpr const char* PLAYER_LBL = "players";
+constexpr const char* MATCHES_LBL = "matches";
+
 void MainWindow::setupWindow()
 {
     m_ui->playerList->setModel(&m_playerList);
@@ -74,8 +77,8 @@ void MainWindow::setupWindow()
 
     connect(m_ui->calcTourneyResB, &QPushButton::clicked, this, &MainWindow::calcFinalResult);
 
-    connect(m_ui->actionSave_Player_List, &QAction::triggered, std::bind(&MainWindow::save, this));
     connect(m_ui->actionSave_Player_List_and_Tournament, &QAction::triggered, std::bind(&MainWindow::save, this));
+    connect(m_ui->actionLoad_Player_List_and_Tournament, &QAction::triggered, std::bind(&MainWindow::load, this));
 
     m_ui->calcTourneyResB->setEnabled(false);
     m_ui->calcTourneyResB->setVisible(false);
@@ -216,13 +219,13 @@ void MainWindow::save()
     {
         playerData.emplace_back(p->getName().toStdString());
     }
-    j["players"] = playerData;
+    j[PLAYER_LBL] = playerData;
 
     //generate match list
-    j["matches"] = std::vector<nlohmann::json>();
+    j[MATCHES_LBL] = std::vector<nlohmann::json>();
     for (const auto& m : m_matches)
     {
-        j["matches"].push_back(m.toJson());
+        j[MATCHES_LBL].push_back(m.toJson());
     }
 
     outFile << j.dump(4);
@@ -249,11 +252,17 @@ void MainWindow::load()
         inFile >> j;
 
         //player list
-        if (!j.contains("players"))
+        if (!j.contains(PLAYER_LBL))
         {
             std::cerr << "missing 'players' list\n";
             return;
         }
+        for (const auto& p : j[PLAYER_LBL])
+        {
+            std::cout << "loading player: " << p.get<std::string>() << std::endl;
+            m_players.emplace_back(std::make_shared<Player>(QString::fromStdString(p.get<std::string>()), 0));
+        }
+        updatePlayerList();
     }
     catch(const std::exception& e)
     {
