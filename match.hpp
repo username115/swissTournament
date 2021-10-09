@@ -90,6 +90,7 @@ public:
     void setupTables();
 
     nlohmann::json toJson() const;
+    bool loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Player>>& playerList);
 
 public slots:
     void setEnabled(bool enable);
@@ -113,4 +114,6 @@ private:
 
     std::random_device m_rd;
     std::default_random_engine m_reng;
+
+    void updateMatchView();
 };

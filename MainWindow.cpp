@@ -259,10 +259,29 @@ void MainWindow::load()
         }
         for (const auto& p : j[PLAYER_LBL])
         {
-            std::cout << "loading player: " << p.get<std::string>() << std::endl;
             m_players.emplace_back(std::make_shared<Player>(QString::fromStdString(p.get<std::string>()), 0));
         }
         updatePlayerList();
+
+        //matches
+        if (!j.contains(MATCHES_LBL))
+        {
+            std::cerr << "missing 'matches' list\n";
+            return;
+        }
+
+        std::size_t idx = 0;
+        for (const auto& match : j[MATCHES_LBL])
+        {
+            if (idx >= m_matches.size())
+            {
+                std::cerr << "WARNING: Ran out of space to put the matches.\n";
+                break;
+            }
+
+            m_matches[idx].loadMatch(match, m_players);
+            idx++;
+        }
     }
     catch(const std::exception& e)
     {
