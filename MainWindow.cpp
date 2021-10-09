@@ -22,35 +22,12 @@
  * SOFTWARE.
  */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-#include <iostream>
-
-
-
-
-
-
-
-
-
-
 #include "MainWindow.hpp"
 
 #include "json.hpp"
 
 #include <fstream>
+#include <iostream>
 
 #include <QInputDialog>
 #include <QMessageBox>

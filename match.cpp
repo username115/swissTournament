@@ -22,33 +22,7 @@
  * SOFTWARE.
  */
 
-
-
-
-
-
-
-
-
-
-
-
-
 #include <iostream>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #include "match.hpp"
 #include <algorithm>
