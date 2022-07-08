@@ -54,9 +54,11 @@ public slots:
     void updatePlayerList();
 
     void updatePlayerCount();
+    void updateMatchCount(int matchCount);
 
     void save();
     void load();
+
 
 private:
     std::unique_ptr<Ui::MainWindow> m_ui;
