@@ -131,12 +131,15 @@ void Match::generateMatch(const QList<std::shared_ptr<Player>> &playerList, std:
 
     updateMatchView();
 }
+
 bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Player>>& players, std::size_t matchNum)
 {
     if (!j.is_array())
     {
         return false;
     }
+
+    reset();
 
     for (const auto p : j)
     {
@@ -216,6 +219,12 @@ bool Match::finalizeMatch(const QList<std::shared_ptr<Player>> &playerList, std:
 
     m_matchView->resizeColumnsToContents();
     return true;
+}
+
+void Match::reset()
+{
+    m_matchups.clear();
+    updateMatchView();
 }
 
 bool Match::generatePairing(const QList<std::shared_ptr<Player>> &playerList, std::int32_t matchNum, std::int32_t maxByes, std::int32_t maxMatchups)
@@ -303,6 +312,7 @@ void Match::updateMatchView()
 
     m_matchView->resizeColumnsToContents();
 }
+
 void Match::updateMatchResultsView(std::size_t matchNum)
 {
     for (int i = 0; i < m_matchups.size(); i++)

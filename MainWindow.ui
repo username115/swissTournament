@@ -351,7 +351,7 @@
      <x>0</x>
      <y>0</y>
      <width>1437</width>
-     <height>18</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -361,7 +361,15 @@
     <addaction name="actionLoad_Player_List_and_Tournament"/>
     <addaction name="actionSave_Player_List_and_Tournament"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionClear_Tournament"/>
+    <addaction name="actionClear_Players_and_Tournament"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionLoad_Player_List_and_Tournament">
@@ -372,6 +380,16 @@
   <action name="actionSave_Player_List_and_Tournament">
    <property name="text">
     <string>Save Player List and Tournament</string>
+   </property>
+  </action>
+  <action name="actionClear_Tournament">
+   <property name="text">
+    <string>Clear Tournament</string>
+   </property>
+  </action>
+  <action name="actionClear_Players_and_Tournament">
+   <property name="text">
+    <string>Clear Players and Tournament</string>
    </property>
   </action>
  </widget>

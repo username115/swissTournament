@@ -54,8 +54,11 @@ void MainWindow::setupWindow()
 
     connect(m_ui->calcTourneyResB, &QPushButton::clicked, this, &MainWindow::calcFinalResult);
 
-    connect(m_ui->actionSave_Player_List_and_Tournament, &QAction::triggered, std::bind(&MainWindow::save, this));
-    connect(m_ui->actionLoad_Player_List_and_Tournament, &QAction::triggered, std::bind(&MainWindow::load, this));
+    connect(m_ui->actionSave_Player_List_and_Tournament, &QAction::triggered, this, &MainWindow::save);
+    connect(m_ui->actionLoad_Player_List_and_Tournament, &QAction::triggered, this, &MainWindow::load);
+
+    connect(m_ui->actionClear_Tournament, &QAction::triggered, this, &MainWindow::clearTournament);
+    connect(m_ui->actionClear_Players_and_Tournament, &QAction::triggered, this, &MainWindow::clearAll);
 
     connect(m_ui->roundCount, &QSpinBox::valueChanged, this, &MainWindow::updateMatchCount);
 
@@ -239,6 +242,8 @@ void MainWindow::load()
         nlohmann::json j;
         inFile >> j;
 
+        clearAll(); //clear data after json loaded successfully
+
         //player list
         if (!j.contains(PLAYER_LBL))
         {
@@ -287,6 +292,23 @@ void MainWindow::load()
     }
 }
 
+
+void MainWindow::clearTournament()
+{
+    for (auto& match : m_matches)
+    {
+        match.reset();
+    }
+}
+
+void MainWindow::clearAll()
+{
+    clearTournament();
+    m_players.clear();
+    updatePlayerList();
+}
+
+
 void MainWindow::generateMatch(int matchNum)
 {
     bool genNext = true;
@@ -294,6 +316,7 @@ void MainWindow::generateMatch(int matchNum)
         genNext = m_matches[matchNum - 1].finalizeMatch(m_players, matchNum - 1);
     if (!genNext)
         return;
+    m_matches[matchNum].reset();
     m_matches[matchNum].generateMatch(m_players, matchNum);
     if ((matchNum + 1) >= m_matchCount)
         m_ui->calcTourneyResB->setEnabled(true);
