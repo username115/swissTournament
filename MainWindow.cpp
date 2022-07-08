@@ -57,6 +57,8 @@ void MainWindow::setupWindow()
     connect(m_ui->actionSave_Player_List_and_Tournament, &QAction::triggered, std::bind(&MainWindow::save, this));
     connect(m_ui->actionLoad_Player_List_and_Tournament, &QAction::triggered, std::bind(&MainWindow::load, this));
 
+    connect(m_ui->roundCount, &QSpinBox::valueChanged, this, &MainWindow::updateMatchCount);
+
     m_ui->calcTourneyResB->setEnabled(false);
     m_ui->calcTourneyResB->setVisible(false);
 
@@ -152,7 +154,6 @@ void MainWindow::updatePlayerCount()
     if (playerCount == 0)
     {
         matchCount = 0;
-        m_ui->calcTourneyResB->setVisible(false);
     }
     else if (playerCount <= 32)
     {
@@ -161,14 +162,19 @@ void MainWindow::updatePlayerCount()
             matchCount++;
         if (playerCount > 16)
             matchCount++;
-        m_ui->calcTourneyResB->setVisible(true);
     }
+    m_ui->roundCount->setValue(matchCount);
+}
+
+void MainWindow::updateMatchCount(int matchCount)
+{
+    m_matchCount = matchCount;
+    m_ui->calcTourneyResB->setVisible(matchCount > 0);
 
     for (int i = 0; i < maxMatchs; i++)
     {
         m_matches[i].setEnabled(i < matchCount);
     }
-    m_matchCount = matchCount;
 }
 
 void MainWindow::save()
@@ -211,6 +217,7 @@ void MainWindow::save()
 
     outFile << j.dump(4);
 }
+
 void MainWindow::load()
 {
     const auto openPath = QFileDialog::getOpenFileName(this, "Open Match", "", "*.json");

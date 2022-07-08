@@ -51,6 +51,20 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Round Count:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="roundCount">
+        <property name="maximum">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item>
