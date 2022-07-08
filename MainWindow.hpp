@@ -59,6 +59,9 @@ public slots:
     void save();
     void load();
 
+    void clearTournament();
+    void clearAll();
+
 
 private:
     std::unique_ptr<Ui::MainWindow> m_ui;

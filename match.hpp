@@ -99,6 +99,8 @@ public slots:
 
     bool finalizeMatch(const QList<std::shared_ptr<Player>> &playerList, std::int32_t matchNum);
 
+    void reset();
+
 private:
     //recursively try pairings
     //requires player list to be sorted based on previous scores
