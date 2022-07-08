@@ -92,6 +92,8 @@ public:
     nlohmann::json toJson() const;
     bool loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Player>>& playerList, std::size_t matchNum);
 
+    bool checkMatchValid(std::int32_t numPlayers);
+
 public slots:
     void setEnabled(bool enable);
 
