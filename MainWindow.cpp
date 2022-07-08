@@ -38,6 +38,7 @@
 
 constexpr const char* PLAYER_LBL = "players";
 constexpr const char* MATCHES_LBL = "matches";
+constexpr const char* MATCH_CNT_LBL = "match_count";
 
 void MainWindow::setupWindow()
 {
@@ -166,7 +167,7 @@ void MainWindow::updatePlayerCount()
         if (playerCount > 16)
             matchCount++;
     }
-    m_ui->roundCount->setValue(matchCount);
+    setMatchCount(matchCount);
 }
 
 void MainWindow::updateMatchCount(int matchCount)
@@ -178,6 +179,11 @@ void MainWindow::updateMatchCount(int matchCount)
     {
         m_matches[i].setEnabled(i < matchCount);
     }
+}
+
+void MainWindow::setMatchCount(int matchCount)
+{
+    m_ui->roundCount->setValue(matchCount);
 }
 
 void MainWindow::save()
@@ -203,6 +209,9 @@ void MainWindow::save()
     }
 
     nlohmann::json j;
+
+    //save number of rounds
+    j[MATCH_CNT_LBL] = m_matchCount;
 
     //generate player list
     auto& playerJ = j[PLAYER_LBL];
@@ -264,6 +273,11 @@ void MainWindow::load()
 
         //finally ready to update the list view
         updatePlayerList();
+
+        if (j.contains(MATCH_CNT_LBL)) //support compatibility with older save files
+        {
+            setMatchCount(j[MATCH_CNT_LBL]);
+        }
 
         //matches
         if (!j.contains(MATCHES_LBL))
