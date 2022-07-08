@@ -179,6 +179,7 @@ void MainWindow::updateMatchCount(int matchCount)
     {
         m_matches[i].setEnabled(i < matchCount);
     }
+    checkCalcTourney();
 }
 
 void MainWindow::setMatchCount(int matchCount)
@@ -298,6 +299,7 @@ void MainWindow::load()
             m_matches[idx].loadMatch(match, m_players, idx);
             idx++;
         }
+        checkCalcTourney();
     }
     catch(const std::exception& e)
     {
@@ -313,6 +315,7 @@ void MainWindow::clearTournament()
     {
         match.reset();
     }
+    checkCalcTourney();
 }
 
 void MainWindow::clearAll()
@@ -320,6 +323,29 @@ void MainWindow::clearAll()
     clearTournament();
     m_players.clear();
     updatePlayerList();
+}
+
+void MainWindow::checkCalcTourney()
+{
+    if (m_matchCount <= 0)
+    {
+        m_ui->calcTourneyResB->setEnabled(false);
+        return;
+    }
+
+    std::size_t max_match = 0;
+    for (auto match: m_matches)
+    {
+        if (match.checkMatchValid(m_players.size()))
+        {
+            max_match++;
+        }
+        else
+        {
+            break;
+        }
+    }
+    m_ui->calcTourneyResB->setEnabled(max_match >= m_matchCount);
 }
 
 
@@ -332,8 +358,7 @@ void MainWindow::generateMatch(int matchNum)
         return;
     m_matches[matchNum].reset();
     m_matches[matchNum].generateMatch(m_players, matchNum);
-    if ((matchNum + 1) >= m_matchCount)
-        m_ui->calcTourneyResB->setEnabled(true);
+    checkCalcTourney();
 }
 
 void MainWindow::calcFinalResult()

@@ -180,8 +180,16 @@ bool Match::loadMatch(const nlohmann::json& j, const QList<std::shared_ptr<Playe
     return true;
 }
 
+bool Match::checkMatchValid(std::int32_t numPlayers)
+{
+    return m_matchups.size() >= ((numPlayers / 2) + (numPlayers % 2));
+}
+
 bool Match::finalizeMatch(const QList<std::shared_ptr<Player>> &playerList, std::int32_t matchNum)
 {
+    if (!checkMatchValid(playerList.size()))
+        return false;
+
     for (int i = 0; i < m_matchups.size(); i++)
     {
         MatchResult res;

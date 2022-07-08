@@ -57,6 +57,8 @@ public slots:
     void updateMatchCount(int matchCount);
     void setMatchCount(int matchCount);
 
+    void checkCalcTourney();
+
     void save();
     void load();
 

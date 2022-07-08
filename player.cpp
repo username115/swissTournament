@@ -360,6 +360,9 @@ bool Player::finalizeLoad(const QList<std::shared_ptr<Player>>& playerList)
     bool res = true;
     for (auto& mr : m_matchResults)
     {
+        //skip lookup for bye matches
+        if (mr.bye)
+            continue;
         bool found = false;
         for (const auto& p : playerList)
         {
