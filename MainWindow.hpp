@@ -55,6 +55,7 @@ public slots:
 
     void updatePlayerCount();
     void updateMatchCount(int matchCount);
+    void setMatchCount(int matchCount);
 
     void save();
     void load();
